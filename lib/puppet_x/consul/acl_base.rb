@@ -2,15 +2,34 @@ require 'puppet_x'
 require 'json'
 require 'net/http'
 require 'uri'
+require 'openssl'
 
 module PuppetX::Consul
     module PuppetX::Consul::ACLBase
 
       class BaseClient
-        def initialize (hostname, port, protocol, api_token = nil)
+        def initialize (hostname, port, protocol, api_token = nil, ca_file = nil)
           @global_uri = URI("#{protocol}://#{hostname}:#{port}/v1/acl")
+          Puppet.debug("Consul URI: #{@global_uri}")
           @http_client = Net::HTTP.new(@global_uri.host, @global_uri.port)
           @api_token = api_token
+
+          if @global_uri.scheme == 'https'
+            Puppet.debug("Protocol #{protocol}, turning on Net::HTTP SSL")
+            @http_client.use_ssl = true
+          end
+
+          if ca_file != nil and ca_file != ''
+            Puppet.debug("Custom CA file #{ca_file} specified")
+            if File.file?(ca_file)
+              store = OpenSSL::X509::Store.new
+              store.set_default_paths
+              store.add_file(ca_file)
+              @http_client.cert_store = store
+            else
+              Puppet.warning("CA File #{ca_file} doesn't exist")
+            end
+          end
         end
 
         def get (path, tries = 1)
@@ -67,6 +86,5 @@ module PuppetX::Consul
           end
         end
       end
-
     end
 end

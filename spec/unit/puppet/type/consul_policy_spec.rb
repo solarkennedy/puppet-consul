@@ -191,13 +191,15 @@ describe Puppet::Type.type(:consul_policy) do
             'disposition' => 'write'
         }
     ]
+    ca_file = '/tmp.ca.pem'
 
     before :each do
       @policy = Puppet::Type.type(:consul_policy).new(
         :name         => 'testing',
         :id           => '39c75e12-7f43-0a40-dfba-9aa3fcda08d4',
         :description  => 'test description',
-        :rules        => rules
+        :rules        => rules,
+        :ca_file      => ca_file
       )
     end
 
@@ -211,6 +213,10 @@ describe Puppet::Type.type(:consul_policy) do
 
     it 'should accept rules' do
       expect(@policy[:rules]).to eq(rules)
+    end
+
+    it 'should accept a ca_file' do
+      expect(@policy[:ca_file]).to eq(ca_file)
     end
 
     it 'should default to localhost' do

@@ -12,7 +12,7 @@ Puppet::Type.type(:consul_policy).provide(
     resources.each do |name, resource|
       rules_encoded = encode_rules(resource[:rules])
 
-      all_policies = list_policies(resource[:acl_api_token], resource[:hostname], resource[:port], resource[:protocol], resource[:api_tries])
+      all_policies = list_policies(resource[:acl_api_token], resource[:hostname], resource[:port], resource[:protocol], resource[:ca_file], resource[:api_tries])
 
       if resource[:id] == ''
         existing_policy = all_policies.select{|policy| policy.name == name}
@@ -53,13 +53,13 @@ Puppet::Type.type(:consul_policy).provide(
     encoded.join("\n\n")
   end
 
-  def self.list_policies(acl_api_token, hostname, port, protocol, tries)
+  def self.list_policies(acl_api_token, hostname, port, protocol, ca_file, tries)
     @all_policies ||= nil
     if @all_policies
       return @all_policies
     end
 
-    @client ||= ConsulACLPolicyClient.new(hostname, port, protocol, acl_api_token)
+    @client ||= ConsulACLPolicyClient.new(hostname, port, protocol, acl_api_token, ca_file)
     @all_policies = @client.get_all_policies(tries)
     @all_policies
   end

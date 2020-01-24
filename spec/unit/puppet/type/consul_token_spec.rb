@@ -35,6 +35,7 @@ describe Puppet::Type.type(:consul_token) do
   context 'with name defined' do
     policies_by_name = ['test_1' 'test_2']
     policies_by_id = ['abc-123' 'xyz-456']
+    ca_file = '/tmp/ca.pem'
 
     before :each do
       @token = Puppet::Type.type(:consul_token).new(
@@ -42,6 +43,7 @@ describe Puppet::Type.type(:consul_token) do
         :accessor_id => '39c75e12-7f43-0a40-dfba-9aa3fcda08d4',
         :policies_by_name => policies_by_name,
         :policies_by_id => policies_by_id,
+        :ca_file => ca_file,
         )
     end
 
@@ -55,6 +57,10 @@ describe Puppet::Type.type(:consul_token) do
 
     it 'should accept policy IDs' do
       expect(@token[:policies_by_id]).to eq(policies_by_id)
+    end
+
+    it 'should accept a ca_file' do
+      expect(@token[:ca_file]).to eq(ca_file)
     end
 
     it 'should default to localhost' do

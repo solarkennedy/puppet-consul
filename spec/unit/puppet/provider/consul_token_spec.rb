@@ -2,20 +2,22 @@ require 'spec_helper'
 require 'json'
 
 describe Puppet::Type.type(:consul_token).provider(:default) do
+  resource_params = {
+    :name              => 'test_token',
+    :accessor_id       => '123123-1234-1234-1234-123456789',
+    :acl_api_token     => 'e33653a6-0320-4a71-b3af-75f14578e3aa',
+    :policies_by_name  => [
+      'test_policy_1'
+    ],
+    :policies_by_id    => [
+      '652f27c9-d08d-412b-8985-9becc9c42fb2'
+    ],
+    :api_tries     => 3,
+    :ca_file       => '/tmp/ca.pem',
+    :ensure        => 'present'
+  }
   let(:resource) { Puppet::Type.type(:consul_token).new(
-      {
-          :name              => 'test_token',
-          :accessor_id       => '123123-1234-1234-1234-123456789',
-          :acl_api_token     => 'e33653a6-0320-4a71-b3af-75f14578e3aa',
-          :policies_by_name  => [
-              'test_policy_1'
-          ],
-          :policies_by_id    => [
-              '652f27c9-d08d-412b-8985-9becc9c42fb2'
-          ],
-          :api_tries     => 3,
-          :ensure        => 'present'
-      }
+    resource_params
   )}
 
   let(:resources) { { 'test_token' => resource } }
@@ -64,6 +66,37 @@ describe Puppet::Type.type(:consul_token).provider(:default) do
         described_class.prefetch(resources)
         described_class.reset
         expect(resource[:accessor_id]).to eql('123123-1234-1234-1234-123456789')
+      end
+    end
+
+    context "over HTTPS" do
+      let(:resource) { Puppet::Type.type(:consul_token).new(
+        resource_params.merge({:protocol => 'https'})
+      )}
+      response = [
+          {
+              'AccessorID'  => '803ba11a-afe9-4198-a179-ef25a2adbf0b',
+              'Description' => 'Test description',
+              'Policies'    => []
+          }
+      ]
+
+      it 'should not fail' do
+        response = [
+            {
+                'AccessorID'  => '803ba11a-afe9-4198-a179-ef25a2adbf0b',
+                'Description' => 'Test description',
+                'Policies'    => []
+            }
+        ]
+
+        stub_request(:get, "https://localhost:8500/v1/acl/tokens").
+            with(:headers => {'X-Consul-Token'=> 'e33653a6-0320-4a71-b3af-75f14578e3aa', 'User-Agent'=>'Ruby'}).
+            to_return(:status => 200, :body => JSON.dump(response), :headers => {})
+
+        described_class.prefetch(resources)
+        described_class.reset
+        expect(resource[:ensure]).to eql(:present)
       end
     end
   end

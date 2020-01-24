@@ -2,6 +2,7 @@ require 'json'
 require 'net/http'
 require 'uri'
 require 'base64'
+require 'openssl'
 Puppet::Type.type(:consul_key_value).provide(
   :default
 ) do
@@ -88,6 +89,25 @@ Puppet::Type.type(:consul_key_value).provide(
     uri = URI("#{@resource[:protocol]}://#{@resource[:hostname]}:#{@resource[:port]}/v1/kv/#{name}?dc=#{@resource[:datacenter]}&token=#{@resource[:acl_api_token]}")
     http = Net::HTTP.new(uri.host, uri.port)
     acl_api_token = @resource[:acl_api_token]
+    ca_file = @resource[:ca_file]
+
+    if uri.scheme == 'https'
+      Puppet.debug("Protocol #{@global_uri.scheme}, turning on Net::HTTP SSL")
+      http.use_ssl = true
+    end
+
+    if ca_file != nil and ca_file != ''
+      Puppet.debug("Custom CA file #{ca_file} specified")
+      if File.file?(ca_file)
+        store = OpenSSL::X509::Store.new
+        store.set_default_paths
+        store.add_file(ca_file)
+        http.cert_store = store
+      else
+        Puppet.warning("CA File #{ca_file} doesn't exist")
+      end
+    end
+
     return uri.request_uri, http
   end
 
@@ -152,7 +172,7 @@ Puppet::Type.type(:consul_key_value).provide(
     key_value = self.get_resource(name, port, hostname, protocol, tries, datacenter)
 
     if @property_flush[:ensure] == :absent
-      #key exists in the kv, but must be deleted. 
+      #key exists in the kv, but must be deleted.
       delete_key_value(name)
     else
       #something changed, otherwise the flush method would not have been called.

@@ -11,20 +11,20 @@ Puppet::Type.type(:consul_token).provide(
 
   def self.prefetch(resources)
     resources.each do |name, resource|
-      tokens = list_tokens(resource[:acl_api_token], resource[:hostname], resource[:port], resource[:protocol], resource[:api_tries])
+      tokens = list_tokens(resource[:acl_api_token], resource[:hostname], resource[:port], resource[:protocol], resource[:ca_file], resource[:api_tries])
       token = tokens.select{|token| token.accessor_id == resource[:accessor_id]}
 
       resource.provider = new({}, @client, token.any? ? token.first : nil, resource)
     end
   end
 
-  def self.list_tokens(acl_api_token, hostname, port, protocol, tries)
+  def self.list_tokens(acl_api_token, hostname, port, protocol, ca_file, tries)
     @token_collection ||= nil
     if @token_collection
       return @token_collection
     end
 
-    @client ||= ConsulACLTokenClient.new(hostname, port, protocol, acl_api_token)
+    @client ||= ConsulACLTokenClient.new(hostname, port, protocol, acl_api_token, ca_file)
     @token_collection = @client.get_token_list(tries)
     @token_collection
   end

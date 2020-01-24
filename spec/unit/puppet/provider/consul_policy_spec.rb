@@ -2,26 +2,28 @@ require 'spec_helper'
 require 'json'
 
 describe Puppet::Type.type(:consul_policy).provider(:default) do
-  let(:resource) { Puppet::Type.type(:consul_policy).new(
+  resource_params = {
+    :name          => 'test_policy',
+    :description   => 'test description',
+    :rules         => [
       {
-          :name          => 'test_policy',
-          :description   => 'test description',
-          :rules         => [
-              {
-                  'resource'    => 'service_prefix',
-                  'segment'     => 'test_service',
-                  'disposition' => 'read'
-              },
-              {
-                  'resource'    => 'key',
-                  'segment'     => 'test_key',
-                  'disposition' => 'write'
-              },
-          ],
-          :acl_api_token => 'e33653a6-0320-4a71-b3af-75f14578e3aa',
-          :api_tries     => 3,
-          :ensure        => 'present'
-      }
+        'resource'    => 'service_prefix',
+        'segment'     => 'test_service',
+        'disposition' => 'read'
+      },
+      {
+        'resource'    => 'key',
+        'segment'     => 'test_key',
+        'disposition' => 'write'
+      },
+    ],
+    :acl_api_token => 'e33653a6-0320-4a71-b3af-75f14578e3aa',
+    :api_tries     => 3,
+    :ca_file       => '/tmp/ca.pem',
+    :ensure        => 'present'
+  }
+  let(:resource) { Puppet::Type.type(:consul_policy).new(
+    resource_params
   )}
 
   let(:resources) { { 'test_policy' => resource } }
@@ -63,6 +65,21 @@ describe Puppet::Type.type(:consul_policy).provider(:default) do
         described_class.prefetch(resources)
         described_class.reset
         expect(resource[:id]).to eql("02298dc3-e1cd-e031-b2c8-ec3023702b20")
+      end
+    end
+
+    context "over HTTPS" do
+      let(:resource) { Puppet::Type.type(:consul_policy).new(
+        resource_params.merge({:protocol => 'https'})
+      )}
+      it 'should not fail' do
+        stub_request(:get, "https://localhost:8500/v1/acl/policies").
+          with(:headers => {'X-Consul-Token'=> 'e33653a6-0320-4a71-b3af-75f14578e3aa', 'User-Agent'=>'Ruby'}).
+          to_return(:status => 200, :body => '[]', :headers => {})
+
+        described_class.prefetch(resources)
+        described_class.reset
+        expect(resource[:ensure]).to eql(:present)
       end
     end
   end

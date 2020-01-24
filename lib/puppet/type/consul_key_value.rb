@@ -65,6 +65,14 @@ Puppet::Type.newtype(:consul_key_value) do
     defaultto 'localhost'
   end
 
+  newparam(:ca_file) do
+    desc 'path to custom Consul CA file'
+    validate do |value|
+      raise ArgumentError, "The ca_file must be a string" if not value.is_a?(String)
+    end
+    defaultto ''
+  end
+
   newparam(:api_tries) do
     desc 'number of tries when contacting the Consul REST API'
     defaultto 3

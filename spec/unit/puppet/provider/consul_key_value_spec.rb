@@ -2,13 +2,14 @@ require 'spec_helper'
 require 'json'
 
 describe Puppet::Type.type(:consul_key_value).provider(:default) do
-  let(:resource) { Puppet::Type.type(:consul_key_value).new(
-    {
+  resource_params = {
       :name          => "sample/key",
       :value         => 'sampleValue',
       :acl_api_token => 'sampleToken',
       :datacenter    => 'dc1',
     }
+  let(:resource) { Puppet::Type.type(:consul_key_value).new(
+    resource_params
   )}
 
   let(:resources) { { 'sample/key' => resource } }
@@ -28,6 +29,30 @@ describe Puppet::Type.type(:consul_key_value).provider(:default) do
         stub_request(:get, "http://localhost:8500/v1/kv/?dc=dc1&recurse&token=sampleToken").
           with(:headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).
           to_return(:status => 400, :body => "", :headers => {}).times(2).then.
+          to_return(:status => 200, :body => JSON.dump(kv_content), :headers => {})
+
+        described_class.reset
+        described_class.prefetch( resources )
+        expect(resource.provider.ensure).to eql(:present)
+      end
+    end
+
+    context "over HTTPS" do
+      let(:resource) { Puppet::Type.type(:consul_key_value).new(
+        resource_params.merge({:protocol => 'https'})
+      )}
+      it 'should not fail' do
+        kv_content = [
+          {"LockIndex" => 0,
+          "Key" => "sample/key",
+          "Flags" => 0,
+          "Value" => "RGlmZmVyZW50IHZhbHVl", #Different value
+          "CreateIndex" => 1350503,
+          "ModifyIndex" => 1350503}
+        ]
+
+        stub_request(:get, "https://localhost:8500/v1/kv/?dc=dc1&recurse&token=sampleToken").
+          with(:headers => {'Accept'=>'*/*', 'User-Agent'=>'Ruby'}).
           to_return(:status => 200, :body => JSON.dump(kv_content), :headers => {})
 
         described_class.reset
