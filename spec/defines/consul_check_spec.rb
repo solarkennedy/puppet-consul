@@ -190,6 +190,46 @@ describe 'consul::check' do
             .with_content(/"interval" *: *"30s"/)
         }
       end
+      describe 'with grpc' do
+        let(:params) {{
+          'grpc' => 'localhost:4244'
+        }}
+        it {
+          should contain_file("/etc/consul/check_my_check.json") \
+            .with_content(/"id" *: *"my_check"/) \
+            .with_content(/"name" *: *"my_check"/) \
+            .with_content(/"check" *: *\{/) \
+            .with_content(/"grpc" *: *"localhost:4244"/)
+        }
+      end
+      describe 'with grpc with tls' do
+        let(:params) {{
+          'grpc' => 'localhost:4244',
+          'grpc_use_tls' => true
+        }}
+        it {
+          should contain_file("/etc/consul/check_my_check.json") \
+            .with_content(/"id" *: *"my_check"/) \
+            .with_content(/"name" *: *"my_check"/) \
+            .with_content(/"check" *: *\{/) \
+            .with_content(/"grpc" *: *"localhost:4244"/) \
+            .with_content(/"grpc_use_tls" *: *"true"/)
+        }
+      end
+      describe 'with grpc with interval' do
+        let(:params) {{
+          'grpc' => 'localhost:4244',
+          'interval' => '10s'
+        }}
+        it {
+          should contain_file("/etc/consul/check_my_check.json") \
+            .with_content(/"id" *: *"my_check"/) \
+            .with_content(/"name" *: *"my_check"/) \
+            .with_content(/"check" *: *\{/) \
+            .with_content(/"grpc" *: *"localhost:4244"/) \
+            .with_content(/"interval" *: *"10s"/)
+        }
+      end
       describe 'with script and service_id' do
         let(:params) {{
           'tcp'        => 'localhost:80',

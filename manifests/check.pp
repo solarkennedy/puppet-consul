@@ -50,20 +50,24 @@
 #   Value in seconds before the http endpoint considers a failing healthcheck
 #   to be "HARD" down.
 #
+# [*grpc*]
+#    gRPC endpoint for the gRPC service healthcheck
+
 define consul::check (
-  $ensure     = present,
-  $http       = undef,
-  $id         = $title,
-  $interval   = undef,
-  $notes      = undef,
-  $script     = undef,
-  $args       = undef,
-  $service_id = undef,
-  $status     = undef,
-  $tcp        = undef,
-  $timeout    = undef,
-  $token      = undef,
-  $ttl        = undef,
+  $ensure           = present,
+  $http             = undef,
+  $id               = $title,
+  $interval         = undef,
+  $notes            = undef,
+  $script           = undef,
+  $args             = undef,
+  $service_id       = undef,
+  $status           = undef,
+  $tcp              = undef,
+  $timeout          = undef,
+  $token            = undef,
+  $ttl              = undef,
+  String[1] $grpc   = undef,
 ) {
   include consul
 
@@ -81,6 +85,7 @@ define consul::check (
     'notes'      => $notes,
     'token'      => $token,
     'status'     => $status,
+    'grpc'       => $grpc
   }
 
   $check_hash = {

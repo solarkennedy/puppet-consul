@@ -35,6 +35,10 @@ Puppet::Functions.create_function(:'consul::validate_checks') do
             if (obj.key?("http") || obj.key?("tcp"))
                 raise Puppet::ParseError.new('http and tcp must not be defined for script checks')
             end
+            elsif (obj.key("grpc")
+            if (obj.key?("http") || obj.key?("tcp"))
+              raise Puppet::ParseError.new('http and tcp must not be defined for grpc checks')
+            end
             else
             raise Puppet::ParseError.new('One of ttl, script, tcp, or http must be defined.')
             end
