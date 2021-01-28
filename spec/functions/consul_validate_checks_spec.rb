@@ -5,7 +5,7 @@ describe 'consul::validate_checks' do
   describe 'validate script and http' do
     it {should run.with_params([
       {
-        'http'    => 'localhost',
+        'http'   => 'localhost',
         'script' => 'true'
       }
     ]).and_raise_error(Exception) }
@@ -23,7 +23,7 @@ describe 'consul::validate_checks' do
   describe 'validate http and tcp' do
     it {should run.with_params([
       {
-        'tcp'    => 'localhost',
+        'tcp'  => 'localhost',
         'http' => 'true'
       }
     ]).and_raise_error(Exception) }
@@ -32,8 +32,8 @@ describe 'consul::validate_checks' do
   describe 'validate script check' do
     it {should run.with_params([
       {
-        'interval'    => '30s',
-        'script' => 'true'
+        'interval' => '30s',
+        'script'   => 'true'
       }
     ])}
   end
@@ -62,11 +62,19 @@ describe 'consul::validate_checks' do
     ]).and_raise_error(Exception) }
   end
 
+  describe 'validate grpc missing interval' do
+    it {should run.with_params([
+      {
+        'grpc' => 'localhost:9000'
+      }
+    ]).and_raise_error(Exception) }
+  end
+
   describe 'validate script and ttl' do
     it {should run.with_params([
       {
         'script' => 'true',
-        'ttl' => 'true'
+        'ttl'    => 'true'
       }
     ]).and_raise_error(Exception) }
   end
@@ -75,7 +83,7 @@ describe 'consul::validate_checks' do
     it {should run.with_params([
       {
         'http' => 'localhost',
-        'ttl' => 'true'
+        'ttl'  => 'true'
       }
     ]).and_raise_error(Exception) }
   end
@@ -89,10 +97,29 @@ describe 'consul::validate_checks' do
     ]).and_raise_error(Exception) }
   end
 
+  describe 'validate grpc and ttl' do
+    it {should run.with_params([
+      {
+        'tcp'  => 'localhost',
+        'grpc' => 'localhost:9000',
+        'ttl'  => 'true'
+      }
+    ]).and_raise_error(Exception) }
+  end
+
   describe 'validate tcp check' do
     it {should run.with_params([
       {
         'tcp'      => 'localhost:80',
+        'interval' => '30s',
+      }
+    ])}
+  end
+
+  describe 'validate grpc check' do
+    it {should run.with_params([
+      {
+        'grpc'      => 'localhost:80',
         'interval' => '30s',
       }
     ])}

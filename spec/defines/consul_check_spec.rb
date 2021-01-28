@@ -19,10 +19,20 @@ describe 'consul::check' do
           }
         }
       end
+      describe 'with no valid args' do
+        let(:params) {{
+          'fakecheck' => 'http://zombo.com'
+        }}
+        it {
+          expect {
+            should raise_error(Puppet::Error, /one of the following check types must be defined: http, tcp, grpc, script, or ttl/)
+          }
+        }
+      end
       describe 'with script' do
         let(:params) {{
-          'interval'    => '30s',
-          'script' => 'true'
+          'interval' => '30s',
+          'script'   => 'true'
         }}
         it {
           should contain_file("/etc/consul/check_my_check.json") \
@@ -49,8 +59,8 @@ describe 'consul::check' do
       end
       describe 'with script and service_id' do
         let(:params) {{
-          'interval'    => '30s',
-          'script' => 'true',
+          'interval'   => '30s',
+          'script'     => 'true',
           'service_id' => 'my_service'
         }}
         it {
@@ -81,8 +91,8 @@ describe 'consul::check' do
       end
       describe 'with http' do
         let(:params) {{
-          'interval'    => '30s',
-          'http' => 'localhost'
+          'interval' => '30s',
+          'http'     => 'localhost'
         }}
         it {
           should contain_file("/etc/consul/check_my_check.json") \
@@ -95,8 +105,8 @@ describe 'consul::check' do
       end
       describe 'with http and service_id' do
         let(:params) {{
-          'interval'    => '30s',
-          'http' => 'localhost',
+          'interval'   => '30s',
+          'http'       => 'localhost',
           'service_id' => 'my_service'
         }}
         it {
@@ -127,8 +137,8 @@ describe 'consul::check' do
       end
       describe 'with http and removed undef values' do
         let(:params) {{
-          'interval'    => '30s',
-          'http' => 'localhost'
+          'interval' => '30s',
+          'http'     => 'localhost'
         }}
         it {
           should contain_file("/etc/consul/check_my_check.json") \
@@ -150,7 +160,7 @@ describe 'consul::check' do
       end
       describe 'with ttl and service_id' do
         let(:params) {{
-          'ttl' => '30s',
+          'ttl'        => '30s',
           'service_id' => 'my_service'
         }}
         it {
@@ -228,47 +238,57 @@ describe 'consul::check' do
           'interval' => '60s'
         }}
         it {
-          should raise_error(Puppet::Error, /script, http, tcp, and interval must not be defined for ttl checks/)
+          should raise_error(Puppet::Error, /interval must not be defined for ttl checks/)
         }
       end
       describe 'with both ttl and script' do
         let(:params) {{
-          'ttl' => '30s',
-          'script' => 'true',
+          'ttl'      => '30s',
+          'script'   => 'true',
           'interval' => '60s'
         }}
         it {
-          should raise_error(Puppet::Error, /script, http, tcp, and interval must not be defined for ttl checks/)
+          should raise_error(Puppet::Error, /multiple check types cannot be specified in a single check definition/)
         }
       end
       describe 'with both ttl and http' do
         let(:params) {{
-          'ttl' => '30s',
-          'http' => 'http://localhost/health',
+          'ttl'      => '30s',
+          'http'     => 'http://localhost/health',
           'interval' => '60s'
         }}
         it {
-          should raise_error(Puppet::Error, /script, http, tcp, and interval must not be defined for ttl checks/)
+          should raise_error(Puppet::Error, /multiple check types cannot be specified in a single check definition/)
         }
       end
       describe 'with both ttl and tcp' do
         let(:params) {{
-          'ttl' => '30s',
-          'tcp' => 'localhost',
+          'ttl'      => '30s',
+          'tcp'      => 'localhost',
           'interval' => '60s'
         }}
         it {
-          should raise_error(Puppet::Error, /script, http, tcp, and interval must not be defined for ttl checks/)
+          should raise_error(Puppet::Error, /multiple check types cannot be specified in a single check definition/)
         }
       end
       describe 'with both script and http' do
         let(:params) {{
-          'script' => 'true',
-          'http' => 'http://localhost/health',
+          'script'   => 'true',
+          'http'     => 'http://localhost/health',
           'interval' => '60s'
         }}
         it {
-          should raise_error(Puppet::Error, /script and tcp must not be defined for http checks/)
+          should raise_error(Puppet::Error, /multiple check types cannot be specified in a single check definition/)
+        }
+      end
+      describe 'with both script and grpc' do
+        let(:params) {{
+          'script'   => 'true',
+          'grpc'     => 'localhost:9000/svc',
+          'interval' => '60s'
+        }}
+        it {
+          should raise_error(Puppet::Error, /multiple check types cannot be specified in a single check definition/)
         }
       end
       describe 'with script but no interval' do
@@ -276,7 +296,7 @@ describe 'consul::check' do
           'script' => 'true',
         }}
         it {
-          should raise_error(Puppet::Error, /interval must be defined for tcp, http, and script checks/)
+          should raise_error(Puppet::Error, /interval must be defined for tcp, http, grpc, and script checks/)
         }
       end
       describe 'with http but no interval' do
@@ -284,7 +304,7 @@ describe 'consul::check' do
           'http' => 'http://localhost/health',
         }}
         it {
-          should raise_error(Puppet::Error, /interval must be defined for tcp, http, and script checks/)
+          should raise_error(Puppet::Error, /interval must be defined for tcp, http, grpc, and script checks/)
         }
       end
       describe 'with tcp but no interval' do
@@ -292,14 +312,22 @@ describe 'consul::check' do
           'tcp' => 'localhost',
         }}
         it {
-          should raise_error(Puppet::Error, /interval must be defined for tcp, http, and script checks/)
+          should raise_error(Puppet::Error, /interval must be defined for tcp, http, grpc, and script checks/)
+        }
+      end
+      describe 'with grpc but no interval' do
+        let(:params) {{
+          'grpc' => 'localhost:9000',
+        }}
+        it {
+          should raise_error(Puppet::Error, /interval must be defined for tcp, http, grpc, and script checks/)
         }
       end
       describe 'with a / in the id' do
         let(:params) {{
-          'ttl' => '30s',
+          'ttl'        => '30s',
           'service_id' => 'my_service',
-          'id' => 'aa/bb',
+          'id'         => 'aa/bb',
         }}
         it { should contain_file("/etc/consul/check_aa_bb.json") \
             .with_content(/"id" *: *"aa\/bb"/)
@@ -307,9 +335,9 @@ describe 'consul::check' do
       end
       describe 'with multiple / in the id' do
         let(:params) {{
-          'ttl' => '30s',
+          'ttl'        => '30s',
           'service_id' => 'my_service',
-          'id' => 'aa/bb/cc',
+          'id'         => 'aa/bb/cc',
         }}
         it { should contain_file("/etc/consul/check_aa_bb_cc.json") \
             .with_content(/"id" *: *"aa\/bb\/cc"/)

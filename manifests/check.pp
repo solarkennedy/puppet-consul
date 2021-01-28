@@ -40,6 +40,10 @@
 #   The IP/hostname and port for the service healthcheck. Should be in
 #   'hostname:port' format.
 #
+# [*grpc*]
+#   The IP/hostname and port for the service healthcheck.  Should be in
+#   'hostname:port' format.
+#
 # [*timeout*]
 #   A timeout value for HTTP request only
 #
@@ -69,6 +73,7 @@ define consul::check (
   $service_id               = undef,
   $status                   = undef,
   $tcp                      = undef,
+  $grpc                     = undef,
   $timeout                  = undef,
   $token                    = undef,
   $ttl                      = undef,
@@ -85,6 +90,7 @@ define consul::check (
     'script'                   => $script,
     'args'                     => $args,
     'tcp'                      => $tcp,
+    'grpc'                     => $grpc,
     'interval'                 => $interval,
     'timeout'                  => $timeout,
     'service_id'               => $service_id,
