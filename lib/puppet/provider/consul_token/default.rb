@@ -67,7 +67,7 @@ Puppet::Type.type(:consul_token).provide(
 
   def flush
     if @resource[:ensure] != :absent && !@existing_token
-      created_token = @client.create_token(@resource[:accessor_id], @resource[:name], @resource[:policies_by_name], @resource[:policies_by_id], @resource[:api_tries],
+      created_token = @client.create_token(@resource[:accessor_id], @resource[:description], @resource[:policies_by_name], @resource[:policies_by_id], @resource[:api_tries],
 @resource[:secret_id] ? @resource[:secret_id] : nil)
       @resource[:accessor_id] = created_token.accessor_id
       @resource[:secret_id] = created_token.secret_id
