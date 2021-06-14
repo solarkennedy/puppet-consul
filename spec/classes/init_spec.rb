@@ -429,6 +429,15 @@ describe 'consul' do
         }
       end
 
+      context "Config with custom config owner" do
+        let(:params) {{
+          :config_owner => 'custom_consul_user',
+          :config_dir => '/etc/custom_consul_dir',
+        }}
+        it { should contain_file('consul config').with(:owner => 'custom_consul_user') }
+        it { should contain_file('/etc/custom_consul_dir').with(:owner => 'custom_consul_user') }
+      end
+
       context 'When consul is reloaded' do
         let(:params) do
           {

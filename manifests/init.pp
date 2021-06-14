@@ -67,6 +67,9 @@
 # [*config_mode*]
 #   Use this to set the JSON config file mode for consul.
 #
+# [*config_owner*]
+#   The user that owns the config_dir directory and its files.
+#
 # [*data_dir_mode*]
 #   Use this to set the data_dir directory mode for consul.
 #
@@ -217,6 +220,7 @@ class consul (
   String[1]                             $config_name                 = 'config.json',
   Hash                                  $config_hash                 = {},
   String[1]                             $config_mode                 = '0664',
+  Optional[String[1]]                   $config_owner                = undef,
   String[1]                             $data_dir_mode               = $consul::params::data_dir_mode,
   String[1]                             $docker_image                = 'consul',
   String[1]                             $download_extension          = 'zip',
@@ -261,13 +265,19 @@ class consul (
   $config_hash_real = deep_merge($config_defaults, $config_hash)
 
   if $install_method == 'docker' {
-    $user_real       = undef
-    $group_real      = undef
-    $init_style_real = 'unmanaged'
+    $user_real         = undef
+    $group_real        = undef
+    $config_owner_real = undef
+    $init_style_real   = 'unmanaged'
   } else {
-    $user_real       = $user
-    $group_real      = $group
-    $init_style_real = $init_style
+    $user_real         = $user
+    $group_real        = $group
+    if $config_owner {
+      $config_owner_real = $config_owner
+    } else {
+      $config_owner_real = $user
+    }
+    $init_style_real   = $init_style
   }
 
   if $config_hash_real['data_dir'] {

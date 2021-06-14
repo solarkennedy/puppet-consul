@@ -115,7 +115,7 @@ class consul::config (
 
   file { $consul::config_dir:
     ensure  => 'directory',
-    owner   => $consul::user_real,
+    owner   => $consul::config_owner_real,
     group   => $consul::group_real,
     purge   => $purge,
     recurse => $purge,
@@ -124,7 +124,7 @@ class consul::config (
   file { 'consul config':
     ensure  => file,
     path    => "${consul::config_dir}/${consul::config_name}",
-    owner   => $consul::user_real,
+    owner   => $consul::config_owner_real,
     group   => $consul::group_real,
     mode    => $consul::config_mode,
     content => consul::sorted_json($config_hash, $consul::pretty_config, $consul::pretty_config_indent),
