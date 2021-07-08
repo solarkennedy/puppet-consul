@@ -5,6 +5,9 @@
 #
 # == Parameters
 #
+# [*config_filename*]
+#   Enables backwards compatiblity, and allows you to override the name of the config file.
+#
 # [*datacenter*]
 #   String overriding consul's default datacenter.
 #
@@ -13,7 +16,7 @@
 #   Defaults to 'present'
 #
 # [*event_name*]
-#   Name of an event to watch for.
+#   Name of an event to watch for, defaults to the resource title.
 #
 # [*handler*]
 #   Full path to the script that will be excuted. This parameter is deprecated
@@ -49,9 +52,10 @@
 #
 define consul::watch (
   $args                          = undef,
+  $config_filename               = "watch_${title}.json",
   $datacenter                    = undef,
   $ensure                        = present,
-  $event_name                    = undef,
+  $event_name                    = $title,
   $handler                       = undef,
   $key                           = undef,
   $keyprefix                     = undef,
@@ -63,7 +67,6 @@ define consul::watch (
   $type                          = undef,
 ) {
   include consul
-  $id = $title
 
   $basic_hash = {
     'type'       => $type,
@@ -141,7 +144,7 @@ define consul::watch (
     watches => [$merged_hash.filter |$key, $val| { $val =~ NotUndef }],
   }
 
-  file { "${consul::config_dir}/watch_${id}.json":
+  file { "${consul::config_dir}/${config_filename}":
     ensure  => $ensure,
     owner   => $consul::user_real,
     group   => $consul::group_real,
